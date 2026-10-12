@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  stub:
+    name: Stub run and nf-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nf-core/setup-nextflow@v2
+
+      - name: Stub run (checks wiring, channels and config; no containers needed)
+        run: nextflow run . -profile test -stub-run
+
+      - uses: nf-core/setup-nf-test@v1
+
+      - name: nf-test
+        run: nf-test test

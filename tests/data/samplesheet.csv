@@ -1,0 +1,5 @@
+sample,condition,donor,matrix_dir
+d1_ctrl,ctrl,d1,d1_ctrl
+d1_stim,stim,d1,d1_stim
+d2_ctrl,ctrl,d2,d2_ctrl
+d2_stim,stim,d2,d2_stim

@@ -1,0 +1,92 @@
+---
+title: "Downstream analysis: annotation and pseudobulk differential expression"
+format:
+  html:
+    toc: true
+    code-fold: true
+    embed-resources: true
+params:
+  integrated_rds: "../results/integrated/integrated.rds"
+---
+
+> Status: skeleton, not yet run on real data. Fill in the dataset section once the
+> pipeline has produced `integrated.rds`.
+
+## Dataset
+
+Describe the public dataset (GEO accession, organism, conditions, number of donors),
+and why it suits the question. Pseudobulk DE needs biological replicates, so aim for
+at least 3 donors per condition.
+
+## Setup
+
+```{r}
+#| message: false
+library(Seurat)
+library(SingleR)
+library(celldex)
+library(DESeq2)
+library(ggplot2)
+
+obj <- readRDS(params$integrated_rds)
+obj
+```
+
+## Cell type annotation
+
+Reference-based annotation with SingleR. Check the result against known marker genes,
+since automated labels can be wrong for rare or unusual populations.
+
+```{r}
+ref  <- celldex::MonacoImmuneData()  # swap for a reference that fits your tissue
+pred <- SingleR(
+  test   = GetAssayData(obj, layer = "data"),
+  ref    = ref,
+  labels = ref$label.main
+)
+obj$cell_type <- pred$labels
+DimPlot(obj, group.by = "cell_type", label = TRUE, repel = TRUE)
+```
+
+## Pseudobulk differential expression
+
+Cells from one donor are not independent replicates. Aggregating counts per
+sample and cell type, then testing with a bulk method, avoids inflated p-values.
+
+Aggregate with `scuttle::aggregateAcrossCells()`, which keeps the sample metadata
+as `colData` instead of encoding it in column names.
+
+```{r}
+library(SingleCellExperiment)
+library(scuttle)
+
+sce <- as.SingleCellExperiment(obj, assay = "RNA")
+pb  <- aggregateAcrossCells(sce, ids = colData(sce)[, c("sample", "cell_type")])
+pb  # columns = sample x cell type; colData carries condition and donor
+```
+
+Choose the design to match the study. If each donor appears in both conditions, use
+`~ donor + condition` (paired). If each donor contributes one sample (as in an
+unpaired case/control study), donor is nested in condition and the design is
+`~ condition`. Skip cell types with too few cells per sample to aggregate reliably.
+
+```{r}
+#| eval: false
+run_de <- function(counts, coldata, design = ~ condition) {
+  dds <- DESeqDataSetFromMatrix(counts, coldata, design = design)
+  dds <- DESeq(dds)
+  results(dds)
+}
+```
+
+## Interpretation notes
+
+- Which cell types respond most, and do the top genes make biological sense?
+- How did Harmony affect mixing of donors, and did it preserve the condition effect?
+- Limitations: ambient RNA not removed, annotation not manually curated.
+
+## Session info
+
+```{r}
+sessionInfo()
+```

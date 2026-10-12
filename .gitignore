@@ -1,0 +1,9 @@
+.nextflow*
+work/
+results*/
+.nf-test/
+*.rds
+.Rhistory
+.Rproj.user/
+analysis/*_files/
+analysis/*.html

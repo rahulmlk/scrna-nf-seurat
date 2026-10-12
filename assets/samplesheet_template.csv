@@ -1,0 +1,3 @@
+sample,condition,donor,matrix_dir
+GSMxxxxxxx,covid,patient1,GSMxxxxxxx
+GSMxxxxxxx,control,control1,GSMxxxxxxx

@@ -1,0 +1,22 @@
+nextflow_pipeline {
+
+    name "scrna-nf-seurat end-to-end (stub)"
+    script "main.nf"
+    options "-stub-run"
+
+    test("Stub run completes for 4 samples") {
+
+        when {
+            params {
+                input  = "$projectDir/tests/data/samplesheet.csv"
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            // 4 x SC_QC + 1 x SC_INTEGRATE
+            assert workflow.trace.succeeded().size() == 5
+        }
+    }
+}
